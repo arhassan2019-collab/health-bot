@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Health Assistant</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI}
+body{background:linear-gradient(135deg,#5cc5c5,#1d8f8f)}
+.hidden{display:none}
+
+/* LOGIN */
+#loginPage{height:100vh;display:flex;justify-content:center;align-items:center}
+.container{width:850px;height:480px;display:flex;background:white;border-radius:22px}
+.form{width:50%;padding:40px}
+.panel{width:50%;background:#1d8f8f;color:white;display:flex;align-items:center;justify-content:center;flex-direction:column}
+input{width:100%;padding:11px;margin:6px;border-radius:8px;border:1px solid #ccc}
+button{width:100%;padding:11px;border:none;border-radius:8px;background:#1d8f8f;color:white;font-weight:600}
+.switch-btn{background:white;color:#1d8f8f;margin-top:6px}
+
+/* APP */
+#app{display:none;background:#f4f7ff;min-height:100vh}
+header{background:#050b1a;color:white;padding:1rem;display:flex;justify-content:space-between}
+.access{background:#02102e;padding:.8rem;display:flex;gap:.7rem}
+a{color:white;padding:.4rem 1rem;border-radius:999px;background:#071836;cursor:pointer;text-decoration:none}
+.active{background:#0476ff}
+main{padding:1rem}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.4rem;margin-top:1rem}
+.card{background:white;padding:2.2rem;border-radius:24px;box-shadow:0 14px 25px rgba(0,0,0,.1);cursor:pointer}
+
+/* MODALS */
+.modal{position:fixed;inset:0;display:none;background:#0008;justify-content:center;align-items:center}
+.modal.active{display:flex}
+.box{background:white;padding:1.6rem;border-radius:22px;width:420px;max-height:90vh;overflow:auto}
+.close-btn{background:red;margin-top:8px}
+
+/* SMART TRACKING */
+.smart-wrap{display:flex;gap:1rem}
+.med-list,.refill-list{width:40%;background:#eef4ff;padding:1rem;border-radius:14px}
+.med-item,.refill-item{margin-top:6px;background:white;padding:6px;border-radius:7px}
+.add-form{width:60%}
+
+/* Calendar */
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{background:#e8f0ff;padding:8px;border-radius:6px;text-align:center;cursor:pointer}
+.taken{background:#00b894;color:white}
+
+/* Alarms */
+.alarmItem{background:#eef4ff;padding:5px;border-radius:7px;margin-top:4px}
+</style>
+</head>
+<body>
+
+<!---------------- LOGIN ---------------->
+<div id="loginPage">
+<div class="container">
+
+<div class="form" id="loginForm">
+<h2>Login</h2>
+<input id="lemail" placeholder="Email">
+<input id="lpass" type="password">
+<button onclick="login()">Login</button>
+<button class="switch-btn" onclick="toggle()">Sign Up</button>
+</div>
+
+<div class="form hidden" id="signupForm">
+<h2>Sign Up</h2>
+<input id="sname" placeholder="Name">
+<input id="semail" placeholder="Email">
+<input id="spass" type="password">
+<button onclick="signup()">Create Account</button>
+<button class="switch-btn" onclick="toggle()">Back to Login</button>
+</div>
+
+<div class="panel"><h2>Health Assistant</h2></div>
+
+</div>
+</div>
+
+<!---------------- APP ---------------->
+<div id="app">
+
+<header>
+<div id="userInfo"></div>
+<button onclick="logout()" style="background:red">Logout</button>
+</header>
+
+<div class="access">
+<a onclick="goto('features')" class="active">Features</a>
+<a onclick="goto('history')">History</a>
+<a onclick="goto('care')">Caregiver</a>
+<a onclick="goto('profile')">Profile</a>
+</div>
+
+<main>
+
+<div id="features" class="grid">
+<div class="card" onclick="openMed()">💊 Smart Tracking</div>
+<div class="card" onclick="modal('voice')">🔔 Alarms & SMS</div>
+</div>
+
+<div id="history" class="grid">
+<div class="card" onclick="modal('calendarModal')">📅 Calendar</div>
+<div class="card" onclick="modal('refill')">🛡 Refill</div>
+</div>
+
+<div id="care" class="grid">
+<div class="card" onclick="modal('careModal')">👥 Caregivers</div>
+<div class="card" onclick="modal('vitals')">❤ Vitals</div>
+</div>
+
+<div id="profile" class="grid">
+<div class="card" onclick="modal('profileModal')">👤 Account</div>
+</div>
+
+</main>
+</div>
+
+<!------------ MODALS -------------->
+<!-- SMART TRACKING -->
+<div class="modal" id="med"><div class="box">
+<h3>Smart Tracking</h3>
+<div class="smart-wrap">
+<div class="med-list"><h4>Medicine List</h4><div id="medSide"></div></div>
+<div class="add-form">
+<input id="medname" placeholder="Medicine name">
+<input id="dose" placeholder="Dose per Day">
+<input id="totalPills" placeholder="Total Pills">
+<button onclick="addMed()">Add</button>
+<button onclick="closeModal()" class="close-btn">Close</button>
+</div>
+</div></div></div>
+
+<!-- REFILL -->
+<div class="modal" id="refill"><div class="box">
+<h3>Refill System</h3>
+<input id="rName" placeholder="Medicine Name">
+<input id="rDose" placeholder="Dose per Day">
+<input id="rStock" placeholder="Total Pills">
+<button onclick="addRefill()">Add</button>
+<div class="refill-list" id="refillList"></div>
+<button onclick="closeModal()" class="close-btn">Close</button>
+</div></div>
+
+<!-- REMINDERS -->
+<div class="modal" id="voice"><div class="box">
+<h3>Voice Alarm</h3>
+<input type="time" id="alarmTime">
+<input id="alarmText" placeholder="Reminder Text">
+<button onclick="setAlarm()">Set Alarm</button>
+<div id="alarms"></div>
+<button class="close-btn" onclick="closeModal()">Close</button>
+</div></div>
+
+<!-- CALENDAR -->
+<div class="modal" id="calendarModal"><div class="box">
+<h3>Calendar</h3>
+<div class="calendar" id="calendar"></div>
+<button class="close-btn" onclick="closeModal()">Close</button>
+</div></div>
+
+<!-- CARE -->
+<div class="modal" id="careModal"><div class="box">
+<h3>Caregivers</h3>
+<select id="city">
+<option disabled selected>Select City</option>
+<option>Hyderabad</option>
+<option>Bangalore</option>
+<option>Chennai</option>
+<option>Pune</option>
+</select>
+<div id="cityCount"></div>
+<div id="cList"></div>
+<button onclick="closeModal()" class="close-btn">Close</button>
+</div></div>
+
+<!-- VITAL -->
+<div class="modal" id="vitals"><div class="box">
+<h3>Vitals</h3>
+<input placeholder="BP"><input placeholder="Heart Rate"><input placeholder="Sugar">
+<button>Save</button>
+<button onclick="closeModal()" class="close-btn">Close</button>
+</div></div>
+
+<!-- PROFILE -->
+<div class="modal" id="profileModal"><div class="box">
+<h3>Account</h3>
+<div id="profileBox"></div>
+<button onclick="closeModal()" class="close-btn">Close</button>
+</div></div>
+
+<script>
+
+/* HASH */
+function hash(t){return btoa(t.split("").reverse().join(""))}
+
+/* TOGGLE */
+function toggle(){loginForm.classList.toggle("hidden");signupForm.classList.toggle("hidden")}
+
+/* SIGNUP */
+function signup(){
+let users=JSON.parse(localStorage.getItem("users"))||[];
+if(users.find(x=>x.email===semail.value))return alert("Account exists");
+users.push({name:sname.value,email:semail.value,pass:hash(spass.value)});
+localStorage.setItem("users",JSON.stringify(users));
+alert("Signup success");toggle();
+}
+
+/* LOGIN */
+function login(){
+let users=JSON.parse(localStorage.getItem("users"))||[];
+let u=users.find(x=>x.email===lemail.value&&x.pass===hash(lpass.value));
+if(!u)return alert("Invalid login");
+localStorage.setItem("session",JSON.stringify(u));
+showApp();
+}
+
+/* SESSION */
+if(localStorage.getItem("session"))showApp();
+function showApp(){
+loginPage.style.display="none";
+app.style.display="block";
+let u=JSON.parse(localStorage.getItem("session"));
+userInfo.innerText="Welcome, "+u.name;
+profileBox.innerHTML=`Name: ${u.name}<br>Email: ${u.email}`;
+}
+function logout(){localStorage.removeItem("session");location.reload();}
+
+/* NAV */
+function goto(id){document.getElementById(id).scrollIntoView({behavior:"smooth"});}
+
+/* MODALS */
+function modal(id){document.getElementById(id).classList.add("active")}
+function closeModal(){document.querySelectorAll(".modal").forEach(m=>m.classList.remove("active"))}
+
+/* MEDICINE */
+let meds=[];
+function openMed(){modal("med");renderMeds();}
+function addMed(){
+if(!medname.value||!dose.value||!totalPills.value)return;
+meds.push({name:medname.value,dose:+dose.value,total:+totalPills.value});
+medname.value=dose.value=totalPills.value="";
+renderMeds();
+}
+function renderMeds(){
+medSide.innerHTML=meds.map(m=>`<div class="med-item">${m.name} | ${m.dose}/day | ${m.total} pills</div>`).join("");
+}
+
+/* REFILL */
+let refill=[];
+function addRefill(){
+if(!rName.value||!rDose.value||!rStock.value)return;
+let days=Math.floor(rStock.value/rDose.value);
+refill.push({n:rName.value,days});
+refillList.innerHTML=refill.map(r=>`<div class="refill-item">💊 ${r.n} — ${r.days} days left</div>`).join("");
+rName.value=rDose.value=rStock.value="";
+}
+
+/* 🔊 UPDATED VOICE ALARM */
+function setAlarm(){
+let [h,m]=alarmTime.value.split(":");
+let now=new Date(),a=new Date();
+a.setHours(h,m,0);
+if(a<now)a.setDate(a.getDate()+1);
+setTimeout(()=>{
+    let msg = new SpeechSynthesisUtterance("Reminder, take medicine: " + alarmText.value);
+    msg.rate=1; msg.volume=1;
+    speechSynthesis.speak(msg);
+    alert("Reminder: "+alarmText.value);
+},(a-now));
+alarms.innerHTML+=`<div class="alarmItem">⏰ ${alarmTime.value} | ${alarmText.value}</div>`;
+}
+
+/* CALENDAR */
+for(let i=1;i<=30;i++){
+let d=document.createElement("div");
+d.className="day"; d.innerText=i;
+d.onclick=()=>d.classList.toggle("taken");
+calendar.appendChild(d);
+}
+
+/* CARE */
+const care={Hyderabad:["Dr Rao","Nurse Anita"],Bangalore:["Dr Mehta"],Chennai:["Dr Kumar"],Pune:["Care Plus"]};
+city.onchange=function(){
+let list=care[this.value]||[];
+cityCount.innerText=list.length+" caregivers available";
+cList.innerHTML=list.join("<br>");
+}
+
+</script>
+</body>
+</html>
